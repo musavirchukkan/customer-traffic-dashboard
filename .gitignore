@@ -1,0 +1,72 @@
+# Monorepo-specific
+.turbo
+.vercel
+.next
+dist
+node_modules
+
+# Root dependencies
+/node_modules
+
+# Apps
+/apps/*/node_modules
+/apps/*/.next
+/apps/*/dist
+/apps/*/build
+/apps/*/.turbo
+/apps/*/.cache
+/apps/*/coverage
+
+# Packages
+/packages/*/node_modules
+/packages/*/dist
+/packages/*/build
+/packages/*/coverage
+/packages/*/.turbo
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+/apps/*/.env
+/apps/*/.env.local
+/apps/*/.env.development
+/apps/*/.env.test
+/apps/*/.env.production
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+._.DS_Store
+._*
+
+# Editors
+.idea
+.vscode
+*.sublime-project
+*.sublime-workspace
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Build artifacts
+*.tsbuildinfo
+*.tgz
+.eslintcache
+
+# Testing
+/coverage
+/apps/*/coverage
+/packages/*/coverage

@@ -1,0 +1,17 @@
+# tools/Dockerfile.mockproducer
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package.json and install dependencies
+COPY tools/package.json ./
+RUN npm install
+
+# Copy source code
+COPY tools/mock-kafka-producer.js ./
+
+# Set environment variables
+ENV NODE_ENV=production
+
+# Start the mock producer
+CMD ["node", "mock-kafka-producer.js"]
