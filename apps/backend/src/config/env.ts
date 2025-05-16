@@ -6,7 +6,7 @@ import path from "path";
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 export const config = {
-  port: process.env.PORT || "5000",
+  port: process.env.PORT || "5001",
   kafka: {
     clientId: process.env.KAFKA_CLIENT_ID || "customer-traffic-consumer",
     brokers: (process.env.KAFKA_BROKERS || "localhost:9092").split(","),
@@ -15,5 +15,8 @@ export const config = {
   },
   cors: {
     origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+  },
+  features: {
+    useMockData: process.env.USE_MOCK_DATA === "true",
   },
 };

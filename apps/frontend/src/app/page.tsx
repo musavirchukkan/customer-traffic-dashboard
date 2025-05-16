@@ -1,4 +1,3 @@
-// apps/frontend/src/app/page.tsx
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -33,12 +32,28 @@ export default function Home() {
   const [historicalLoading, setHistoricalLoading] = useState<boolean>(true);
   const [filterStoreId, setFilterStoreId] = useState<string>('');
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Get API URL and refresh intervals from environment variables
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+  const LIVE_DATA_REFRESH_INTERVAL = parseInt(process.env.NEXT_PUBLIC_AUTO_REFRESH_LIVE_DATA || '3000', 10);
+  const HISTORICAL_DATA_REFRESH_INTERVAL = parseInt(process.env.NEXT_PUBLIC_AUTO_REFRESH_HISTORICAL_DATA || '60000', 10);
 
   // Fetch live data
   const fetchLiveData = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/stores');
+      setError(null);
+      console.log('Fetching live data from:', `${API_URL}/stores`);
+      const response = await fetch(`${API_URL}/stores`);
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      }
+
       const data = await response.json();
+
+      // Log the received data
+      console.log('Received live data:', data);
 
       // Update store states
       setStoreStates(data.data || []);
@@ -70,6 +85,7 @@ export default function Home() {
       setLoading(false);
     } catch (error) {
       console.error('Error fetching store data:', error);
+      setError(`Failed to fetch live data: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setLoading(false);
     }
   };
@@ -78,16 +94,28 @@ export default function Home() {
   const fetchHistoricalData = async () => {
     try {
       setHistoricalLoading(true);
+      setError(null);
       const url = filterStoreId
-        ? `http://localhost:5001/api/history?store_id=${filterStoreId}`
-        : 'http://localhost:5001/api/history';
+        ? `${API_URL}/history?store_id=${filterStoreId}`
+        : `${API_URL}/history`;
 
+      console.log('Fetching historical data from:', url);
       const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      }
+
       const data = await response.json();
+
+      // Log the received data
+      console.log('Received historical data:', data);
+
       setHistoricalData(data.data || []);
       setHistoricalLoading(false);
     } catch (error) {
       console.error('Error fetching historical data:', error);
+      setError(`Failed to fetch historical data: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setHistoricalLoading(false);
     }
   };
@@ -95,8 +123,15 @@ export default function Home() {
   // Manual refresh function
   const handleRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([fetchLiveData(), fetchHistoricalData()]);
-    setRefreshing(false);
+    setError(null);
+    try {
+      await Promise.all([fetchLiveData(), fetchHistoricalData()]);
+    } catch (error) {
+      console.error('Error during refresh:', error);
+      setError(`Refresh failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   // Set up data fetching at regular intervals
@@ -106,8 +141,8 @@ export default function Home() {
     fetchHistoricalData();
 
     // Set up polling intervals
-    const liveDataInterval = setInterval(fetchLiveData, 3000); // Update live data every 3 seconds
-    const historyInterval = setInterval(fetchHistoricalData, 60000); // Update history every minute
+    const liveDataInterval = setInterval(fetchLiveData, LIVE_DATA_REFRESH_INTERVAL); // Update live data as per env config
+    const historyInterval = setInterval(fetchHistoricalData, HISTORICAL_DATA_REFRESH_INTERVAL); // Update history as per env config
 
     // Clean up intervals on component unmount
     return () => {
@@ -146,6 +181,21 @@ export default function Home() {
           {refreshing ? 'Refreshing...' : 'Refresh Data'}
         </button>
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <div style={{
+          padding: '1rem',
+          marginBottom: '1rem',
+          backgroundColor: '#fee2e2',
+          borderLeft: '4px solid #dc2626',
+          color: '#b91c1c',
+          borderRadius: '0.25rem'
+        }}>
+          <p><strong>Error:</strong> {error}</p>
+          <p>Please check that the backend server is running at {API_URL}</p>
+        </div>
+      )}
 
       {/* Live Traffic Table */}
       <div style={{ marginBottom: '2rem', backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)' }}>
@@ -308,7 +358,8 @@ export default function Home() {
 
       {/* Update information */}
       <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.875rem', color: '#6b7280' }}>
-        Data refreshes automatically: Live data every 3 seconds, historical data every minute.
+        Data refreshes automatically: Live data every {LIVE_DATA_REFRESH_INTERVAL / 1000} seconds, historical data every {HISTORICAL_DATA_REFRESH_INTERVAL / 60000} minute(s).
+        <div>API URL: {API_URL}</div>
       </div>
     </div>
   );

@@ -1,4 +1,3 @@
-// apps/backend/src/services/socketService.ts
 import { Server } from "socket.io";
 import http from "http";
 import { WebSocketEvents } from "shared";
@@ -14,9 +13,10 @@ class SocketService {
   initialize(server: http.Server): void {
     this.io = new Server(server, {
       cors: {
-        origin: config.cors.origin,
+        origin: "*", // Allow all origins for development
         methods: ["GET", "POST"],
         credentials: true,
+        allowedHeaders: ["Content-Type", "Authorization"],
       },
     });
 
